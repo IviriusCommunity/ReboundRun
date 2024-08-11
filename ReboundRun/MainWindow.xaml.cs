@@ -245,6 +245,8 @@ namespace ReboundRun
                     await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
                 }
             }
+
+            Close();
         }
 
         private async void SplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
@@ -374,6 +376,11 @@ namespace ReboundRun
             {
                 await Run();
             }
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 
