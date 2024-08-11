@@ -10,7 +10,7 @@
   <Identity
     Name="8ab98b2f-6dbe-4358-a752-979d011f968d"
     Publisher="CN=Ivirius"
-    Version="0.0.1.0" />
+    Version="0.0.2.0" />
 
   <mp:PhoneIdentity PhoneProductId="8ab98b2f-6dbe-4358-a752-979d011f968d" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
