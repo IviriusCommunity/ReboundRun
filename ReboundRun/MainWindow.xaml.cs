@@ -20,6 +20,7 @@ using Windows.ApplicationModel.Appointments.AppointmentsProvider;
 using Windows.ApplicationModel.Store;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage.Pickers;
 using Windows.System;
 using WinUIEx;
 
@@ -130,6 +131,8 @@ namespace ReboundRun
             else if (newEntry.Contains("://"))
             {
                 await Launcher.LaunchUriAsync(new Uri(newEntry));
+
+                Close();
             }
 
             // Settings URI
@@ -157,6 +160,8 @@ namespace ReboundRun
                     try
                     {
                         Process.Start(startInfo);
+
+                        Close();
                     }
                     catch (Exception ex)
                     {
@@ -187,6 +192,8 @@ namespace ReboundRun
                 try
                 {
                     Process.Start(startInfo);
+
+                    Close();
                 }
                 catch (Exception ex)
                 {
@@ -210,6 +217,8 @@ namespace ReboundRun
                 try
                 {
                     Process.Start(startInfo);
+
+                    Close();
                 }
                 catch (Exception ex)
                 {
@@ -239,14 +248,14 @@ namespace ReboundRun
                 try
                 {
                     Process.Start(startInfo);
+
+                    Close();
                 }
                 catch (Exception ex)
                 {
                     await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
                 }
             }
-
-            Close();
         }
 
         private async void SplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
@@ -381,6 +390,45 @@ namespace ReboundRun
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        private async void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            // Create a file picker
+            var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+
+            // See the sample code below for how to make the window accessible from the App class.
+            var window = this;
+
+            // Retrieve the window handle (HWND) of the current WinUI 3 window.
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+
+            // Initialize the file picker with the window handle (HWND).
+            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+            // Set options for your file picker
+            openPicker.ViewMode = PickerViewMode.Thumbnail;
+            openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+            openPicker.CommitButtonText = "Select file to run";
+            openPicker.FileTypeFilter.Add(".exe");
+            openPicker.FileTypeFilter.Add(".pif");
+            openPicker.FileTypeFilter.Add(".com");
+            openPicker.FileTypeFilter.Add(".bat");
+            openPicker.FileTypeFilter.Add(".cmd");
+            openPicker.FileTypeFilter.Add("*");
+
+            // Open the picker for the user to pick a file
+            var file = await openPicker.PickSingleFileAsync();
+            if (file != null)
+            {
+                RunBox.Text = file.Path;
+                await Run();
+            }
+            else
+            {
+
+            }
+
         }
     }
 

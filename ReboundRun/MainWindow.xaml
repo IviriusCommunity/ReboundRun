@@ -339,7 +339,7 @@
                 </SplitButton.Flyout>
             </SplitButton>
             <Button Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Cancel" Margin="0, 20, 0, 20" Click="Button_Click"/>
-            <Button Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Browse" Margin="0, 20, 20, 20"/>
+            <Button Grid.Column="4" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Browse" Margin="0, 20, 20, 20" Click="Button_Click_1"/>
         </Grid>
     </Grid>
 </winuiex:WindowEx>
