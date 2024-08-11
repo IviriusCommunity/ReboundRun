@@ -69,6 +69,8 @@ namespace ReboundRun
             }
             m_window = new MainWindow();
             m_window.Activate();
+            await Task.Delay(10);
+            (m_window as WindowEx).SetForegroundWindow();
             (m_window as WindowEx).BringToFront();
             if (string.Join(" ", Environment.GetCommandLineArgs().Skip(1)).Contains("STARTUP"))
             {
