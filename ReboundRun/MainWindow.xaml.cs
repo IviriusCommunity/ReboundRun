@@ -39,6 +39,7 @@ namespace ReboundRun
             this.MoveAndResize(25, WindowsDisplayAPI.Display.GetDisplays().ToList<WindowsDisplayAPI.Display>()[0].CurrentSetting.Resolution.Height - 370, 525, 295);
             this.IsMinimizable = false;
             this.IsMaximizable = false;
+            this.IsResizable = false;
             this.AppWindow.DefaultTitleBarShouldMatchAppModeTheme = true;
             this.SetIcon($"{AppContext.BaseDirectory}/Assets/RunBox.ico");
             this.Title = "Run";
