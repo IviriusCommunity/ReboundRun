@@ -1,3 +1,4 @@
+using Microsoft.Graphics.Display;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -34,10 +35,19 @@ namespace ReboundRun
     /// </summary>
     public sealed partial class MainWindow : WindowEx
     {
+        public double Scale()
+        {
+            // Get the DisplayInformation object for the current view
+            DisplayInformation displayInformation = DisplayInformation.CreateForWindowId(this.AppWindow.Id);
+            // Get the RawPixelsPerViewPixel which gives the scale factor
+            var scaleFactor = displayInformation.RawPixelsPerViewPixel;
+            return scaleFactor;
+        }
+
         public MainWindow()
         {
             this.InitializeComponent();
-            this.MoveAndResize(25, WindowsDisplayAPI.Display.GetDisplays().ToList<WindowsDisplayAPI.Display>()[0].CurrentSetting.Resolution.Height - 370, 525, 295);
+            this.MoveAndResize(25 * Scale(), (WindowsDisplayAPI.Display.GetDisplays().ToList<WindowsDisplayAPI.Display>()[0].CurrentSetting.Resolution.Height - 370 / Scale()) / Scale(), 525, 295);
             this.IsMinimizable = false;
             this.IsMaximizable = false;
             this.IsResizable = false;
@@ -378,12 +388,25 @@ namespace ReboundRun
                 {
                     FileName = "powershell.exe",
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                 };
 
-                if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"{RunBox.Text}\" -ArgumentList \"{ArgsBox.Text}\"";
-                else startInfo.Arguments = $"Start-Process -FilePath \"{RunBox.Text}\"";
+                // Handle arguments with spaces by wrapping them in double quotes
+                string runBoxText = RunBox.Text.ToString();
+                string argsBoxText = ArgsBox.Text.ToString();
 
+                if (!string.IsNullOrWhiteSpace(argsBoxText))
+                {
+                    startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' -ArgumentList '{argsBoxText}'";
+                }
+                else
+                {
+                    startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' ";
+                }
+
+                // Handle running as administrator
                 if (admin)
                 {
                     startInfo.Arguments += " -Verb RunAs";
@@ -392,16 +415,24 @@ namespace ReboundRun
 
                 try
                 {
-                    var res = Process.Start(startInfo);
-                    await res.WaitForExitAsync();
-                    if (res.ExitCode == 0) Close();
-                    else throw new Exception();
+                    var process = Process.Start(startInfo);
+                    await process.WaitForExitAsync();
+
+                    if (process.ExitCode == 0)
+                    {
+                        Close();
+                    }
+                    else
+                    {
+                        throw new Exception($"Process exited with code {process.ExitCode}");
+                    }
                 }
                 catch (Exception ex)
                 {
-                    await this.ShowMessageDialogAsync($"The system cannot find the file specified or the command line arguments are invalid.", "Error");
+                    await this.ShowMessageDialogAsync("The system cannot find the file specified or the command line arguments are invalid.", "Error");
                 }
             }
+
         }
 
         private async void SplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
