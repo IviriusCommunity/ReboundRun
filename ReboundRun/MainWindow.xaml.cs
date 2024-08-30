@@ -253,6 +253,114 @@ namespace ReboundRun
             }
 
             // control.exe
+            else if (newEntry.Contains("tpm.msc") && runLegacy != true)
+            {
+                if (File.Exists("C:\\Rebound11\\rtpm.exe"))
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rtpm.exe\" -ArgumentList \"{ArgsBox.Text}\"";
+                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rtpm.exe\"";
+
+                    if (admin)
+                    {
+                        startInfo.Arguments += " -Verb RunAs";
+                        startInfo.Verb = "runas";
+                    }
+
+                    try
+                    {
+                        var res = Process.Start(startInfo);
+                        await res.WaitForExitAsync();
+                        if (res.ExitCode == 0) Close();
+                        else await Run(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Run(true);
+                    }
+                }
+                else await Run(true, admin);
+            }
+
+            // control.exe
+            else if (newEntry.Contains("cleanmgr") && runLegacy != true)
+            {
+                if (File.Exists("C:\\Rebound11\\rcleanmgr.exe"))
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcleanmgr.exe\" -ArgumentList \"{ArgsBox.Text}\"";
+                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcleanmgr.exe\"";
+
+                    if (admin)
+                    {
+                        startInfo.Arguments += " -Verb RunAs";
+                        startInfo.Verb = "runas";
+                    }
+
+                    try
+                    {
+                        var res = Process.Start(startInfo);
+                        await res.WaitForExitAsync();
+                        if (res.ExitCode == 0) Close();
+                        else await Run(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Run(true);
+                    }
+                }
+                else await Run(true, admin);
+            }
+
+            // control.exe
+            else if (newEntry.Contains("osk") && runLegacy != true)
+            {
+                if (File.Exists("C:\\Rebound11\\rosk.exe"))
+                {
+                    var startInfo = new ProcessStartInfo
+                    {
+                        FileName = "powershell.exe",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rosk.exe\" -ArgumentList \"{ArgsBox.Text}\"";
+                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rosk.exe\"";
+
+                    if (admin)
+                    {
+                        startInfo.Arguments += " -Verb RunAs";
+                        startInfo.Verb = "runas";
+                    }
+
+                    try
+                    {
+                        var res = Process.Start(startInfo);
+                        await res.WaitForExitAsync();
+                        if (res.ExitCode == 0) Close();
+                        else await Run(true);
+                    }
+                    catch (Exception ex)
+                    {
+                        await Run(true);
+                    }
+                }
+                else await Run(true, admin);
+            }
+
+            // control.exe
             else if (newEntry.Contains("UserAccountControlSettings.exe") && runLegacy != true)
             {
                 if (File.Exists("C:\\Rebound11\\ruacsettings.exe"))
