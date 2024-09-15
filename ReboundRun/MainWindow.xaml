@@ -316,6 +316,9 @@
                             <MenuFlyoutItem.Icon>
                                 <ImageIcon Source="/Assets/Administrator.ico"/>
                             </MenuFlyoutItem.Icon>
+                            <MenuFlyoutItem.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control, Shift" Key="Enter"/>
+                            </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Run as Administrator (Legacy)" Click="MenuFlyoutItem_Click_3" ToolTipService.ToolTip="Rebound 11 replaces run entries of classic Windows applets with Rebound apps. To launch the legacy applets as administrator, use this option instead. (Also launches Task Manager without WinUI 3.)">
                             <MenuFlyoutItem.Icon>

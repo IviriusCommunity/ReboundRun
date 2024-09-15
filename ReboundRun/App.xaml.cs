@@ -21,6 +21,8 @@ using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
+using Windows.UI.Input.Preview.Injection;
 using WinUIEx;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -51,33 +53,45 @@ namespace ReboundRun
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
         {
             CreateShortcut();
+
             try
             {
+                // Background window creation
                 bkgWindow = new WindowEx();
                 bkgWindow.SystemBackdrop = new TransparentTintBackdrop();
                 bkgWindow.IsMaximizable = false;
                 bkgWindow.SetExtendedWindowStyle(ExtendedWindowStyle.ToolWindow);
                 bkgWindow.SetWindowStyle(WindowStyle.Visible);
-                bkgWindow.Activate();
+                bkgWindow.Activate();  // Activate the background window
                 bkgWindow.MoveAndResize(0, 0, 0, 0);
-                bkgWindow.Minimize();
-                bkgWindow.SetWindowOpacity(0);
+                bkgWindow.Minimize();  // Minimize to make sure it's not in focus
+                bkgWindow.SetWindowOpacity(0);  // Set opacity to 0
             }
             catch
             {
-
+                // Handle errors here
             }
+
             m_window = new MainWindow();
-            m_window.Activate();
-            await Task.Delay(10);
-            (m_window as WindowEx).SetForegroundWindow();
-            (m_window as WindowEx).BringToFront();
+
+            // Register any background tasks or hooks
+            StartHook();
+
+            // If started with the "STARTUP" argument, exit early
             if (string.Join(" ", Environment.GetCommandLineArgs().Skip(1)).Contains("STARTUP"))
             {
-                m_window.Close();
+                return;
             }
-            //RegisterBackgroundTask();
-            StartHook();
+
+            // Activate the main window
+            m_window.Activate();
+
+            // Ensure m_window is brought to the front with more delay
+            await Task.Delay(100);  // Increase delay slightly
+            m_window.Activate();  // Reactivate the main window to ensure focus
+            m_window.Show();  // Show the window
+
+            ((WindowEx)m_window).BringToFront();
         }
 
         private void CreateShortcut()
@@ -98,8 +112,10 @@ namespace ReboundRun
 
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x0100;
+        private const int WM_KEYUP = 0x0101;
         private const int VK_R = 0x52;
         private const int VK_LWIN = 0x5B;
+        private const int VK_RWIN = 0x5C;
 
         private static IntPtr hookId = IntPtr.Zero;
         private static LowLevelKeyboardProc keyboardProc;
@@ -126,33 +142,161 @@ namespace ReboundRun
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
+        private static bool winKeyPressed = false;
+        private static bool rKeyPressed = false;
+
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+            if (nCode >= 0)
             {
                 int vkCode = Marshal.ReadInt32(lParam);
 
-                // Check for Win + R combination
-                if (vkCode == VK_R && (GetKeyState(VK_LWIN) & 0x8000) != 0)
+                // Check for keydown events
+                if (wParam == (IntPtr)WM_KEYDOWN)
                 {
-                    ((WindowEx)m_window).Show();
-                    ((WindowEx)m_window).BringToFront();
-                    try
+                    // Check if Windows key is pressed
+                    if (vkCode is VK_LWIN or VK_RWIN)
                     {
-                        ((WindowEx)m_window).Activate();
+                        winKeyPressed = true;
                     }
-                    catch
+
+                    // Check if 'R' key is pressed
+                    if (vkCode is VK_R)
                     {
-                        m_window = new MainWindow();
-                        m_window.Show();
-                        ((WindowEx)m_window).BringToFront();
+                        rKeyPressed = true;
+
+                        // If both Win and R are pressed, show the window
+                        if (winKeyPressed)
+                        {
+                            ((WindowEx)m_window).Show();
+                            ((WindowEx)m_window).BringToFront();
+                            try
+                            {
+                                ((WindowEx)m_window).Activate();
+                            }
+                            catch
+                            {
+                                m_window = new MainWindow();
+                                m_window.Show();
+                                ((WindowEx)m_window).BringToFront();
+                            }
+
+                            // Prevent default behavior of Win + R
+                            return (IntPtr)1;
+                        }
                     }
-                    // Prevent default behavior of Win + R
-                    return (IntPtr)1;
+                }
+
+                // Check for keyup events
+                if (wParam == (IntPtr)WM_KEYUP)
+                {
+                    /*switch (vkCode)
+                    {
+                        case VK_LWIN | VK_RWIN:
+                            {
+                                winKeyPressed = false;
+
+                                // Suppress the Windows Start menu if 'R' is still pressed
+                                if (rKeyPressed)
+                                {
+                                    return (IntPtr)1; // Prevent Windows menu from appearing
+                                }
+                                return 0;
+                            }
+                        case VK_R:
+                            {
+                                rKeyPressed = false;
+
+                                // Suppress the Windows Start menu if 'R' is still pressed
+                                if (winKeyPressed)
+                                {
+                                    return (IntPtr)1; // Prevent Windows menu from appearing
+                                }
+                                return 0;
+                            }
+                        default:
+                            {
+                                return 0;
+                            }
+                    }*/
+
+                    // Check if Windows key is released
+                    if (vkCode is VK_LWIN or VK_RWIN)
+                    {
+                        winKeyPressed = false;
+
+                        // Suppress the Windows Start menu if 'R' is still pressed
+                        if (rKeyPressed == true)
+                        {
+                            ForceReleaseWin();
+                            return (IntPtr)1; // Prevent Windows menu from appearing
+                        }
+                    }
+
+                    // Check if 'R' key is released
+                    if (vkCode is VK_R)
+                    {
+                        rKeyPressed = false;
+                    }
                 }
             }
 
             return CallNextHookEx(hookId, nCode, wParam, lParam);
+        }
+
+        public static async void ForceReleaseWin()
+        {
+            await Task.Delay(10);
+
+            var inj = InputInjector.TryCreate();
+            var info = new InjectedInputKeyboardInfo();
+            info.VirtualKey = (ushort)VirtualKey.LeftWindows;
+            info.KeyOptions = InjectedInputKeyOptions.KeyUp;
+            var infocol = new[] { info };
+
+            inj.InjectKeyboardInput(infocol);
+        }
+
+        public const int INPUT_KEYBOARD = 1;
+        public const int KEYEVENTF_KEYUP = 0x0002;
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct INPUT
+        {
+            public uint type;
+            public MOUSEKEYBDHARDWAREINPUT mkhi;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        public struct MOUSEKEYBDHARDWAREINPUT
+        {
+            [FieldOffset(0)]
+            public MOUSEKEYBDHARDWAREINPUT_KBD ki;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MOUSEKEYBDHARDWAREINPUT_KBD
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
+
+        public static void ReleaseKey(ushort keyCode)
+        {
+            INPUT[] inputs = new INPUT[1];
+            inputs[0].type = INPUT_KEYBOARD;
+            inputs[0].mkhi.ki.wVk = keyCode;
+            inputs[0].mkhi.ki.dwFlags = KEYEVENTF_KEYUP;
+            inputs[0].mkhi.ki.time = 0;
+            inputs[0].mkhi.ki.dwExtraInfo = IntPtr.Zero;
+
+            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
         }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
