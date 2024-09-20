@@ -134,413 +134,231 @@ namespace ReboundRun
 
         public async Task Run(bool runLegacy = false, bool admin = false)
         {
-            string newEntry = RunBox.Text;
-            if (string.IsNullOrEmpty(newEntry)) return;
+            string newEntry = RunBox.Text.ToString();
 
-            // URI
-            else if (newEntry.Contains("://"))
+            if (newEntry.Contains("://") == true)
             {
                 await Launcher.LaunchUriAsync(new Uri(newEntry));
-
                 Close();
-            }
-
-            // Settings URI
-            else if (newEntry.ToLower() == "settings")
-            {
-                if (!runLegacy) await Launcher.LaunchUriAsync(new Uri("ms-settings:///"));
-                else
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"control\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"control\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                    }
-                    catch (Exception ex)
-                    {
-                        await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
-                    }
-                }
-            }
-
-            // dfrgui.exe
-            else if (newEntry.Contains("dfrgui") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rdfrgui.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rdfrgui.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rdfrgui.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("control") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rcontrol.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcontrol.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcontrol.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("tpm.msc") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rtpm.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rtpm.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rtpm.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("cleanmgr") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rcleanmgr.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcleanmgr.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rcleanmgr.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("osk") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rosk.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rosk.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rosk.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("UserAccountControlSettings.exe") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\ruacsettings.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\ruacsettings.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\ruacsettings.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // control.exe
-            else if (newEntry.Contains("winver") && runLegacy != true)
-            {
-                if (File.Exists("C:\\Rebound11\\rwinver.exe"))
-                {
-                    var startInfo = new ProcessStartInfo
-                    {
-                        FileName = "powershell.exe",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-
-                    if (ArgsBox.Text.ToString() != string.Empty) startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rwinver.exe\" -ArgumentList \"{ArgsBox.Text}\"";
-                    else startInfo.Arguments = $"Start-Process -FilePath \"C:\\Rebound11\\rwinver.exe\"";
-
-                    if (admin)
-                    {
-                        startInfo.Arguments += " -Verb RunAs";
-                        startInfo.Verb = "runas";
-                    }
-
-                    try
-                    {
-                        var res = Process.Start(startInfo);
-                        await res.WaitForExitAsync();
-                        if (res.ExitCode == 0) Close();
-                        else await Run(true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await Run(true);
-                    }
-                }
-                else await Run(true, admin);
-            }
-
-            // Task Manager legacy
-            else if (newEntry.Contains("taskmgr") && runLegacy == true)
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = "taskmgr -d"
-                };
-
-                if (admin == true) startInfo.Verb = "runas";
-
-                try
-                {
-                    var res = Process.Start(startInfo);
-                    await res.WaitForExitAsync();
-                    if (res.ExitCode == 0) Close();
-                }
-                catch (Exception ex)
-                {
-                    await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
-                }
-            }
-
-            // Task Manager legacy
-            else if (newEntry.Contains("run") && runLegacy == true)
-            {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    Arguments = "(New-Object -ComObject \"Shell.Application\").FileRun()"
-                };
-
-                if (admin == true) startInfo.Verb = "runas";
-
-                try
-                {
-                    var res = Process.Start(startInfo);
-                    await res.WaitForExitAsync();
-                    if (res.ExitCode == 0) Close();
-                }
-                catch (Exception ex)
-                {
-                    await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
-                }
-            }
-
-            // Task Manager legacy
-            else if (newEntry.Contains("run") && runLegacy != true)
-            {
-                await this.ShowMessageDialogAsync($"The WinUI 3 run box is already opened.", "Error");
                 return;
             }
 
-            // Process or executable command
+            switch(RunBox.Text.ToString().ToLower())
+            {
+                case "":
+                    {
+                        return;
+                    }
+                case "settings":
+                    {
+                        if (!runLegacy) await Launcher.LaunchUriAsync(new Uri("ms-settings:///"));
+                        else await RunPowershell("control", ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "dfrgui" or "dfrgui.exe" or @"c:\windows\system32\dfrgui.exe" or "rdfrgui" or "rdfrgui.exe":
+                    {
+                        string path = @"C:\Rebound11\rdfrgui.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "control" or "control.exe" or @"c:\windows\system32\control.exe" or "rcontrol" or "rcontrol.exe":
+                    {
+                        string path = @"C:\Rebound11\rcontrol.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "tpm" or "tpm.msc" or @"c:\windows\system32\tpm.msc" or "rtpm" or "rtpm.exe":
+                    {
+                        string path = @"C:\Rebound11\rtpm.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "cleanmgr" or "cleanmgr.exe" or @"c:\windows\system32\cleanmgr.exe" or "rcleanmgr" or "rcleanmgr.exe":
+                    {
+                        string path = @"C:\Rebound11\rcleanmgr.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "osk" or "osk.exe" or @"c:\windows\system32\osk.exe" or "rosk" or "rosk.exe":
+                    {
+                        string path = @"C:\Rebound11\rosk.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "useraccountcontrolsettings" or "useraccountcontrolsettings.exe" or @"c:\windows\system32\useraccountcontrolsettings.exe" or "ruacsettings" or "ruacsettings.exe":
+                    {
+                        string path = @"C:\Rebound11\ruacsettings.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "winver" or "winver.exe" or @"c:\windows\system32\winver.exe" or "rwinver" or "rwinver.exe":
+                    {
+                        string path = @"C:\Rebound11\rwinver.exe";
+                        if (File.Exists(path) && !runLegacy)
+                        {
+                            await RunPowershell(path, ArgsBox.Text, admin);
+                            return;
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "taskmgr" or "taskmgr.exe" or @"c:\windows\system32\taskmgr.exe":
+                    {
+                        if (runLegacy == true)
+                        {
+                            var startInfo = new ProcessStartInfo
+                            {
+                                FileName = "powershell.exe",
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                Arguments = "taskmgr -d"
+                            };
+
+                            if (admin == true) startInfo.Verb = "runas";
+
+                            try
+                            {
+                                var res = Process.Start(startInfo);
+                                await res.WaitForExitAsync();
+                                if (res.ExitCode == 0) Close();
+                            }
+                            catch (Exception ex)
+                            {
+                                await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
+                            }
+                        }
+                        else await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        Close();
+                        return;
+                    }
+                case "run" or "rrun" or "rrun.exe":
+                    {
+                        if (runLegacy == true)
+                        {
+                            var startInfo = new ProcessStartInfo
+                            {
+                                FileName = "powershell.exe",
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                Arguments = "(New-Object -ComObject \"Shell.Application\").FileRun()"
+                            };
+
+                            if (admin == true) startInfo.Verb = "runas";
+
+                            try
+                            {
+                                var res = Process.Start(startInfo);
+                                await res.WaitForExitAsync();
+                                if (res.ExitCode == 0) Close();
+                            }
+                            catch (Exception ex)
+                            {
+                                await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
+                            }
+                        }
+                        else
+                        {
+                            await this.ShowMessageDialogAsync($"The WinUI 3 run box is already opened.", "Error");
+                            return;
+                        }
+                        Close();
+                        return;
+                    }
+                default:
+                    {
+                        await RunPowershell(RunBox.Text, ArgsBox.Text, admin);
+                        return;
+                    }
+            }
+        }
+
+        public async Task RunPowershell(string fileLocation, string arguments, bool admin)
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "powershell.exe",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            };
+
+            // Handle arguments with spaces by wrapping them in double quotes
+            string runBoxText = fileLocation;
+            string argsBoxText = arguments;
+
+            if (!string.IsNullOrWhiteSpace(argsBoxText))
+            {
+                startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' -ArgumentList '{argsBoxText}'";
+            }
             else
             {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
+                startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' ";
+            }
 
-                // Handle arguments with spaces by wrapping them in double quotes
-                string runBoxText = RunBox.Text.ToString();
-                string argsBoxText = ArgsBox.Text.ToString();
+            // Handle running as administrator
+            if (admin)
+            {
+                startInfo.Arguments += " -Verb RunAs";
+                startInfo.Verb = "runas";
+            }
 
-                if (!string.IsNullOrWhiteSpace(argsBoxText))
+            try
+            {
+                var process = Process.Start(startInfo);
+                await process.WaitForExitAsync();
+
+                if (process.ExitCode == 0)
                 {
-                    startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' -ArgumentList '{argsBoxText}'";
+                    Close();
                 }
                 else
                 {
-                    startInfo.Arguments = $"Start-Process -FilePath '{runBoxText}' ";
-                }
-
-                // Handle running as administrator
-                if (admin)
-                {
-                    startInfo.Arguments += " -Verb RunAs";
-                    startInfo.Verb = "runas";
-                }
-
-                try
-                {
-                    var process = Process.Start(startInfo);
-                    await process.WaitForExitAsync();
-
-                    if (process.ExitCode == 0)
-                    {
-                        Close();
-                    }
-                    else
-                    {
-                        throw new Exception($"Process exited with code {process.ExitCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await this.ShowMessageDialogAsync("The system cannot find the file specified or the command line arguments are invalid.", "Error");
+                    throw new Exception($"Process exited with code {process.ExitCode}");
                 }
             }
-
+            catch (Exception ex)
+            {
+                await this.ShowMessageDialogAsync("The system cannot find the file specified or the command line arguments are invalid.", "Error");
+            }
         }
 
         private async void SplitButton_Click(SplitButton sender, SplitButtonClickEventArgs args)
