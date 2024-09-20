@@ -293,7 +293,7 @@
             </Style>
         </Grid.Resources>
         <TextBlock Text="Type the name of a program, folder, document, or Internet resource, and Windows will open it for you." TextWrapping="WrapWholeWords" Margin="125, 25, 25, 25"/>
-        <ComboBox x:Name="RunBox" KeyUp="RunBox_KeyUp" IsEditable="True" HorizontalAlignment="Stretch" Margin="125, 85, 25, 0"/>
+        <ComboBox x:Name="RunBox" KeyUp="RunBox_KeyUp" KeyDown="RunBox_KeyDown" IsEditable="True" HorizontalAlignment="Stretch" Margin="125, 85, 25, 0"/>
         <TextBox x:Name="ArgsBox" Margin="126, 130, 25, 0" VerticalAlignment="Top"/>
         <Image Source="/Assets/RunBox.ico" Width="64" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30, 15"/>
         <TextBlock Text="Open:" Margin="30, 90, 0, 0" HorizontalAlignment="Left"/>
@@ -307,33 +307,46 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <SplitButton Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Run" Margin="20, 20, 0, 20">
+            <SplitButton Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Run" Margin="20, 20, 0, 20" Height="32">
                 <SplitButton.Flyout>
                     <MenuFlyout>
-                        <MenuFlyoutItem Text="Hover for information" IsEnabled="False"/>
+                        <MenuFlyoutItem Text="Hover for information" IsEnabled="False">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph=""/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
                         <MenuFlyoutSeparator/>
                         <MenuFlyoutItem Text="Run as Administrator" Click="MenuFlyoutItem_Click_2" ToolTipService.ToolTip="Run the selected process as administrator. This option will attempt to launch the corresponding Rebound 11 counterpart of the chosen task.">
                             <MenuFlyoutItem.Icon>
                                 <ImageIcon Source="/Assets/Administrator.ico"/>
                             </MenuFlyoutItem.Icon>
                             <MenuFlyoutItem.KeyboardAccelerators>
-                                <KeyboardAccelerator Modifiers="Control, Shift" Key="Enter"/>
+                                <KeyboardAccelerator Modifiers="Control, Shift" Key="Enter" IsEnabled="False"/>
                             </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Run as Administrator (Legacy)" Click="MenuFlyoutItem_Click_3" ToolTipService.ToolTip="Rebound 11 replaces run entries of classic Windows applets with Rebound apps. To launch the legacy applets as administrator, use this option instead. (Also launches Task Manager without WinUI 3.)">
                             <MenuFlyoutItem.Icon>
                                 <ImageIcon Source="/Assets/Administrator.ico"/>
                             </MenuFlyoutItem.Icon>
+                            <MenuFlyoutItem.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control, Menu, Shift" Key="Enter"/>
+                            </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Run" Click="MenuFlyoutItem_Click_1" ToolTipService.ToolTip="This option will attempt to launch the corresponding Rebound 11 counterpart of the chosen task.">
                             <MenuFlyoutItem.Icon>
-                                <ImageIcon Source="/Assets/EXE.ico"/>
+                                <FontIcon Glyph=""/>
                             </MenuFlyoutItem.Icon>
+                            <MenuFlyoutItem.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="Enter"/>
+                            </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Run Legacy" Click="MenuFlyoutItem_Click" ToolTipService.ToolTip="Rebound 11 replaces run entries of classic Windows applets with Rebound apps. To launch the legacy applets, use this option instead. (Also launches Task Manager without WinUI 3.)">
                             <MenuFlyoutItem.Icon>
-                                <ImageIcon Source="/Assets/ClassicEXE.ico"/>
+                                <FontIcon Glyph=""/>
                             </MenuFlyoutItem.Icon>
+                            <MenuFlyoutItem.KeyboardAccelerators>
+                                <KeyboardAccelerator Modifiers="Control, Menu" Key="Enter"/>
+                            </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Clear history" Click="MenuFlyoutItem_Click_4" Visibility="Collapsed">
                             

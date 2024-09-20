@@ -53,8 +53,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.0-prerelease.240722.1" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" />
+		<PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.1.3" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1" />
 		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.240701003-experimental2" />
 		<PackageReference Include="WindowsDisplayAPI" Version="1.3.0.13" />
 		<PackageReference Include="WinUIEx" Version="2.3.4" />

@@ -1,4 +1,5 @@
 using Microsoft.Graphics.Display;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -23,6 +24,7 @@ using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
 using Windows.System;
+using Windows.UI.Core;
 using WinUIEx;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -482,12 +484,39 @@ namespace ReboundRun
             }
         }
 
+        private HashSet<VirtualKey> pressedKeys = new();
+
         private async void RunBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Enter)
+            if (e.Key == VirtualKey.Enter &&
+                pressedKeys.Contains(VirtualKey.Control) &&
+                pressedKeys.Contains(VirtualKey.Menu) &&
+                pressedKeys.Contains(VirtualKey.Shift))
+            {
+                await Run(true, true);
+                return;
+            }
+            else if (e.Key == VirtualKey.Enter &&
+                pressedKeys.Contains(VirtualKey.Control) &&
+                pressedKeys.Contains(VirtualKey.Shift))
+            {
+                await Run(false, true);
+                return;
+            }
+            else if (e.Key == VirtualKey.Enter &&
+                pressedKeys.Contains(VirtualKey.Control) &&
+                pressedKeys.Contains(VirtualKey.Menu))
+            {
+                await Run(true, false);
+                return;
+            }
+            else if (e.Key == VirtualKey.Enter)
             {
                 await Run();
+                return;
             }
+
+            pressedKeys.Remove(e.Key);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -525,13 +554,17 @@ namespace ReboundRun
             if (file != null)
             {
                 RunBox.Text = file.Path;
-                await Run();
             }
             else
             {
 
             }
 
+        }
+
+        private void RunBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            pressedKeys.Add(e.Key);
         }
     }
 
