@@ -178,7 +178,12 @@ namespace ReboundRun
                             {
                                 m_window = new MainWindow();
                                 m_window.Show();
+                                ((WindowEx)m_window).Activate();
                                 ((WindowEx)m_window).BringToFront();
+                            }
+                            finally
+                            {
+                                //(m_window as MainWindow).CloseRunBoxMethod();
                             }
 
                             // Prevent default behavior of Win + R

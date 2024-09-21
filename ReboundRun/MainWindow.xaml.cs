@@ -55,8 +55,9 @@ namespace ReboundRun
             this.IsResizable = false;
             this.AppWindow.DefaultTitleBarShouldMatchAppModeTheme = true;
             this.SetIcon($"{AppContext.BaseDirectory}/Assets/RunBox.ico");
-            this.Title = "Run";
+            this.Title = "Rebound Run";
             this.SystemBackdrop = new MicaBackdrop();
+            CheckForRunBox();
             Load();
             LoadRunHistory();
         }
@@ -275,6 +276,7 @@ namespace ReboundRun
                     {
                         if (runLegacy == true)
                         {
+                            allowCloseOfRunBox = false;
                             var startInfo = new ProcessStartInfo
                             {
                                 FileName = "powershell.exe",
@@ -289,7 +291,10 @@ namespace ReboundRun
                             {
                                 var res = Process.Start(startInfo);
                                 await res.WaitForExitAsync();
-                                if (res.ExitCode == 0) Close();
+                                if (res.ExitCode == 0)
+                                {
+                                    Close();
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -310,6 +315,19 @@ namespace ReboundRun
                         return;
                     }
             }
+        }
+
+        bool allowCloseOfRunBox { get; set; } = true;
+
+        public async void CloseRunBoxMethod()
+        {
+            if (allowCloseOfRunBox == true)
+            {
+                CloseRunBox();
+            }
+
+            await Task.Delay(50);
+            CloseRunBoxMethod();
         }
 
         public async Task RunPowershell(string fileLocation, string arguments, bool admin)
@@ -486,9 +504,43 @@ namespace ReboundRun
 
         private HashSet<VirtualKey> pressedKeys = new();
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+        private const uint WM_CLOSE = 0x0010;
+
+        private void CloseRunBox()
+        {
+            // Find the window with the title "Run"
+            IntPtr hWnd = FindWindow(null, "Run");
+
+            if (hWnd != IntPtr.Zero)
+            {
+                // Send WM_CLOSE to close the window
+                bool sent = PostMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+
+                if (sent)
+                {
+                    this.BringToFront();
+                }
+            }
+        }
+
         private async void RunBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            if (e.Key == VirtualKey.Enter &&
+            if (e.Key == VirtualKey.Escape &&
+                !pressedKeys.Contains(VirtualKey.Control) &&
+                !pressedKeys.Contains(VirtualKey.Menu) &&
+                !pressedKeys.Contains(VirtualKey.Shift))
+            {
+                Close();
+                return;
+            }
+            else if (e.Key == VirtualKey.Enter &&
                 pressedKeys.Contains(VirtualKey.Control) &&
                 pressedKeys.Contains(VirtualKey.Menu) &&
                 pressedKeys.Contains(VirtualKey.Shift))
@@ -565,6 +617,42 @@ namespace ReboundRun
         private void RunBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             pressedKeys.Add(e.Key);
+        }
+
+        private void Grid_KeyUp(object sender, KeyRoutedEventArgs e)
+        {
+            /*if (e.Key == VirtualKey.Escape)
+            {
+                this.Close();
+                return;
+            }*/
+        }
+
+        private void WindowEx_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+        {
+            CheckForRunBox();
+        }
+
+        public void CheckForRunBox()
+        {
+            IntPtr hWnd = FindWindow(null, "Run");
+            if (hWnd == IntPtr.Zero)
+            {
+                allowCloseOfRunBox = true;
+                CloseRunBoxMethod();
+                return;
+            }
+            else
+            {
+                allowCloseOfRunBox = false;
+                CloseRunBoxMethod();
+                return;
+            }
+        }
+
+        private void WindowEx_Closed(object sender, WindowEventArgs args)
+        {
+            allowCloseOfRunBox = false;
         }
     }
 
