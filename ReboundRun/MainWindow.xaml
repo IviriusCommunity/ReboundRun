@@ -347,7 +347,7 @@
                                 <FontIcon Glyph=""/>
                             </MenuFlyoutItem.Icon>
                             <MenuFlyoutItem.KeyboardAccelerators>
-                                <KeyboardAccelerator Modifiers="Control, Menu" Key="Enter"/>
+                                <KeyboardAccelerator Modifiers="Menu" Key="Enter"/>
                             </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Clear history" Click="MenuFlyoutItem_Click_4" Visibility="Collapsed">

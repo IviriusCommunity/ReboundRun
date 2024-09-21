@@ -11,10 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
@@ -24,12 +26,165 @@ using Windows.Foundation.Collections;
 using Windows.System;
 using Windows.UI.Input.Preview.Injection;
 using WinUIEx;
+using File = System.IO.File;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace ReboundRun
 {
+    public class SingleInstanceLaunchEventArgs : EventArgs
+    {
+        public SingleInstanceLaunchEventArgs(string arguments, bool isFirstLaunch)
+        {
+            Arguments = arguments;
+            IsFirstLaunch = isFirstLaunch;
+        }
+        public string Arguments { get; private set; } = "";
+        public bool IsFirstLaunch { get; private set; }
+    }
+
+    public sealed class SingleInstanceDesktopApp : IDisposable
+    {
+        private readonly string _mutexName = "";
+        private readonly string _pipeName = "";
+        private readonly object _namedPiperServerThreadLock = new();
+
+        private bool _isDisposed = false;
+        private bool _isFirstInstance;
+
+        private Mutex? _mutexApplication;
+        private NamedPipeServerStream? _namedPipeServerStream;
+
+        public event EventHandler<SingleInstanceLaunchEventArgs>? Launched;
+
+        public SingleInstanceDesktopApp(string appId)
+        {
+            _mutexName = "MUTEX_" + appId;
+            _pipeName = "PIPE_" + appId;
+        }
+
+        public void Launch(string arguments)
+        {
+            if (string.IsNullOrEmpty(arguments))
+            {
+                // The arguments from LaunchActivatedEventArgs can be empty, when
+                // the user specified arguments (e.g. when using an execution alias). For this reason we
+                // alternatively check for arguments using a different API.
+                var argList = System.Environment.GetCommandLineArgs();
+                if (argList.Length > 1)
+                {
+                    arguments = string.Join(' ', argList.Skip(1));
+                }
+            }
+
+            if (IsFirstApplicationInstance())
+            {
+                CreateNamedPipeServer();
+                Launched?.Invoke(this, new SingleInstanceLaunchEventArgs(arguments, isFirstLaunch: true));
+            }
+            else
+            {
+                SendArgumentsToRunningInstance(arguments);
+
+                Process.GetCurrentProcess().Kill();
+                // Note: needed to kill the process in WinAppSDK 1.0, since Application.Current.Exit() does not work there.
+                // OR: Application.Current.Exit();
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_isDisposed)
+                return;
+
+            _isDisposed = true;
+
+            _namedPipeServerStream?.Dispose();
+            _mutexApplication?.Dispose();
+        }
+
+        private bool IsFirstApplicationInstance()
+        {
+            // Allow for multiple runs but only try and get the mutex once
+            if (_mutexApplication == null)
+            {
+                _mutexApplication = new Mutex(true, _mutexName, out _isFirstInstance);
+            }
+
+            return _isFirstInstance;
+        }
+
+        /// <summary>
+        /// Starts a new pipe server if one isn't already active.
+        /// </summary>
+        private void CreateNamedPipeServer()
+        {
+            _namedPipeServerStream = new NamedPipeServerStream(
+                _pipeName, PipeDirection.In,
+                maxNumberOfServerInstances: 1,
+                PipeTransmissionMode.Byte,
+                PipeOptions.Asynchronous,
+                inBufferSize: 0,
+                outBufferSize: 0);
+
+            _namedPipeServerStream.BeginWaitForConnection(OnNamedPipeServerConnected, _namedPipeServerStream);
+        }
+
+        private void SendArgumentsToRunningInstance(string arguments)
+        {
+            try
+            {
+                using var namedPipeClientStream = new NamedPipeClientStream(".", _pipeName, PipeDirection.Out);
+                namedPipeClientStream.Connect(3000); // Maximum wait 3 seconds
+                using var sw = new StreamWriter(namedPipeClientStream);
+                sw.Write(arguments);
+                sw.Flush();
+            }
+            catch (Exception)
+            {
+                // Error connecting or sending
+            }
+        }
+
+        private void OnNamedPipeServerConnected(IAsyncResult asyncResult)
+        {
+            try
+            {
+                if (_namedPipeServerStream == null)
+                    return;
+
+                _namedPipeServerStream.EndWaitForConnection(asyncResult);
+
+                // Read the arguments from the pipe
+                lock (_namedPiperServerThreadLock)
+                {
+                    using var sr = new StreamReader(_namedPipeServerStream);
+                    var args = sr.ReadToEnd();
+                    Launched?.Invoke(this, new SingleInstanceLaunchEventArgs(args, isFirstLaunch: false));
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // EndWaitForConnection will throw when the pipe closes before there is a connection.
+                // In that case, we don't create more pipes and just return.
+                // This will happen when the app is closed and therefor the pipe is closed as well.
+                return;
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+            finally
+            {
+                // Close the original pipe (we will create a new one each time)
+                _namedPipeServerStream?.Dispose();
+            }
+
+            // Create a new pipe for next connection
+            CreateNamedPipeServer();
+        }
+    }
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
@@ -39,9 +194,15 @@ namespace ReboundRun
         /// Initializes the singleton application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
         /// </summary>
+        
+        private readonly SingleInstanceDesktopApp _singleInstanceApp;
+
         public App()
         {
             this.InitializeComponent();
+
+            _singleInstanceApp = new SingleInstanceDesktopApp("REBOUNDRUN");
+            _singleInstanceApp.Launched += OnSingleInstanceLaunched;
         }
 
         public static WindowEx bkgWindow;
@@ -51,6 +212,31 @@ namespace ReboundRun
         /// </summary>
         /// <param name="args">Details about the launch request and process.</param>
         protected override async void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
+        {
+            _singleInstanceApp.Launch(args.Arguments);
+        }
+
+        private async void OnSingleInstanceLaunched(object? sender, SingleInstanceLaunchEventArgs e)
+        {
+            if (e.IsFirstLaunch)
+            {
+                await LaunchWork();
+            }
+            else
+            {
+                // Get the current process
+                Process currentProcess = Process.GetCurrentProcess();
+
+                // Start a new instance of the application
+                Process.Start(currentProcess.MainModule.FileName);
+
+                // Terminate the current process
+                currentProcess.Kill();
+                return;
+            }
+        }
+
+        public async Task<int> LaunchWork()
         {
             CreateShortcut();
 
@@ -80,7 +266,7 @@ namespace ReboundRun
             // If started with the "STARTUP" argument, exit early
             if (string.Join(" ", Environment.GetCommandLineArgs().Skip(1)).Contains("STARTUP"))
             {
-                return;
+                return 0;
             }
 
             // Activate the main window
@@ -92,12 +278,14 @@ namespace ReboundRun
             m_window.Show();  // Show the window
 
             ((WindowEx)m_window).BringToFront();
+
+            return 0;
         }
 
         private void CreateShortcut()
         {
             string startupFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
-            string shortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRun.lnk");
+            string shortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRunStartup.lnk");
             string appPath = "C:\\Rebound11\\rrunSTARTUP.exe";
 
             if (!System.IO.File.Exists(shortcutPath))
@@ -130,6 +318,8 @@ namespace ReboundRun
         {
             UnhookWindowsHookEx(hookId);
         }
+
+        public static bool allowCloseOfRunBox { get; set; } = true;
 
         private static IntPtr SetHook(LowLevelKeyboardProc proc)
         {

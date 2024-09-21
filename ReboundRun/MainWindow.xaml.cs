@@ -16,6 +16,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Appointments.AppointmentsProvider;
@@ -40,11 +41,18 @@ namespace ReboundRun
     {
         public double Scale()
         {
-            // Get the DisplayInformation object for the current view
-            DisplayInformation displayInformation = DisplayInformation.CreateForWindowId(this.AppWindow.Id);
-            // Get the RawPixelsPerViewPixel which gives the scale factor
-            var scaleFactor = displayInformation.RawPixelsPerViewPixel;
-            return scaleFactor;
+            try
+            {
+                // Get the DisplayInformation object for the current view
+                DisplayInformation displayInformation = DisplayInformation.CreateForWindowId(this.AppWindow.Id);
+                // Get the RawPixelsPerViewPixel which gives the scale factor
+                var scaleFactor = displayInformation.RawPixelsPerViewPixel;
+                return scaleFactor;
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         public MainWindow()
@@ -277,7 +285,7 @@ namespace ReboundRun
                     {
                         if (runLegacy == true)
                         {
-                            allowCloseOfRunBox = false;
+                            App.allowCloseOfRunBox = false;
                             var startInfo = new ProcessStartInfo
                             {
                                 FileName = "powershell.exe",
@@ -290,6 +298,7 @@ namespace ReboundRun
 
                             try
                             {
+                                await this.ShowMessageDialogAsync($"You will have to open this app again to bring back the Windows + R invoke command for Rebound Run.", "Important");
                                 var res = Process.Start(startInfo);
                                 Close();
                                 Process.GetCurrentProcess().Kill();
@@ -315,11 +324,9 @@ namespace ReboundRun
             }
         }
 
-        bool allowCloseOfRunBox { get; set; } = true;
-
         public async void CloseRunBoxMethod()
         {
-            if (allowCloseOfRunBox == true)
+            if (App.allowCloseOfRunBox == true)
             {
                 CloseRunBox();
             }
@@ -560,19 +567,24 @@ namespace ReboundRun
             }
             else if (e.Key == VirtualKey.Enter &&
                 pressedKeys.Contains(VirtualKey.Control) &&
+                !pressedKeys.Contains(VirtualKey.Menu) &&
                 pressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run(false, true);
                 return;
             }
             else if (e.Key == VirtualKey.Enter &&
-                pressedKeys.Contains(VirtualKey.Control) &&
-                pressedKeys.Contains(VirtualKey.Menu))
+                !pressedKeys.Contains(VirtualKey.Control) &&
+                pressedKeys.Contains(VirtualKey.Menu) &&
+                !pressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run(true, false);
                 return;
             }
-            else if (e.Key == VirtualKey.Enter)
+            else if (e.Key == VirtualKey.Enter &&
+                !pressedKeys.Contains(VirtualKey.Control) &&
+                !pressedKeys.Contains(VirtualKey.Menu) &&
+                !pressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run();
                 return;
@@ -648,13 +660,13 @@ namespace ReboundRun
             IntPtr hWnd = FindWindow(null, "Run");
             if (hWnd == IntPtr.Zero)
             {
-                allowCloseOfRunBox = true;
+                App.allowCloseOfRunBox = true;
                 CloseRunBoxMethod();
                 return;
             }
             else
             {
-                allowCloseOfRunBox = false;
+                App.allowCloseOfRunBox = false;
                 CloseRunBoxMethod();
                 return;
             }
@@ -662,7 +674,7 @@ namespace ReboundRun
 
         private void WindowEx_Closed(object sender, WindowEventArgs args)
         {
-            allowCloseOfRunBox = false;
+            //App.allowCloseOfRunBox = false;
         }
     }
 
