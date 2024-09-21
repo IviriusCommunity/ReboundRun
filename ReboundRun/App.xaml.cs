@@ -285,6 +285,15 @@ namespace ReboundRun
         private void CreateShortcut()
         {
             string startupFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
+            string oldShortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRun.lnk");
+            try
+            {
+                File.Delete(oldShortcutPath);
+            }
+            catch
+            {
+
+            }
             string shortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRunStartup.lnk");
             string appPath = "C:\\Rebound11\\rrunSTARTUP.exe";
 
