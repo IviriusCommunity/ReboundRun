@@ -326,10 +326,7 @@ namespace ReboundRun
 
         public async void CloseRunBoxMethod()
         {
-            if (App.allowCloseOfRunBox == true)
-            {
                 CloseRunBox();
-            }
 
             await Task.Delay(50);
             CloseRunBoxMethod();
@@ -532,15 +529,16 @@ namespace ReboundRun
                 {
                     try
                     {
-                        App.m_window = new MainWindow();
-                        App.m_window.Show();
-                        App.m_window.Activate();
                         (App.m_window as MainWindow).BringToFront();
+                        App.m_window.Title = "Rebound Run";
                         return;
                     }
                     catch
                     {
-
+                        App.m_window = new MainWindow();
+                        App.m_window.Show();
+                        App.m_window.Activate();
+                        (App.m_window as MainWindow).BringToFront();
                     }
                     this.BringToFront();
                 }
