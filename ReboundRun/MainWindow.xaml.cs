@@ -19,6 +19,7 @@ using System.Security;
 using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Appointments.AppointmentsProvider;
+using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.Store;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -290,11 +291,8 @@ namespace ReboundRun
                             try
                             {
                                 var res = Process.Start(startInfo);
-                                await res.WaitForExitAsync();
-                                if (res.ExitCode == 0)
-                                {
-                                    Close();
-                                }
+                                Close();
+                                Process.GetCurrentProcess().Kill();
                             }
                             catch (Exception ex)
                             {
@@ -525,6 +523,18 @@ namespace ReboundRun
 
                 if (sent)
                 {
+                    try
+                    {
+                        App.m_window = new MainWindow();
+                        App.m_window.Show();
+                        App.m_window.Activate();
+                        (App.m_window as MainWindow).BringToFront();
+                        return;
+                    }
+                    catch
+                    {
+
+                    }
                     this.BringToFront();
                 }
             }
