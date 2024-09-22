@@ -7,6 +7,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
+using Microsoft.Win32.TaskScheduler;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,6 +28,9 @@ using Windows.System;
 using Windows.UI.Input.Preview.Injection;
 using WinUIEx;
 using File = System.IO.File;
+using Path = System.IO.Path;
+using Task = System.Threading.Tasks.Task;
+using TimeTrigger = Windows.ApplicationModel.Background.TimeTrigger;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -282,8 +286,47 @@ namespace ReboundRun
             return 0;
         }
 
+        public void CreateStartupTask()
+        {
+            string taskName = "ReboundRun"; // Set your desired task name
+            string appPath = Path.GetFullPath($@"shell:AppsFolder\{Package.Current.Id.FamilyName}!App"); // Set the path to your application
+
+            using (var ts = new TaskService())
+            {
+                // Check if the task already exists
+                Microsoft.Win32.TaskScheduler.Task existingTask = ts.FindTask(taskName);
+
+                if (existingTask != null)
+                {
+                    Console.WriteLine("Task already exists. No new task created.");
+                    return; // Task already exists, so we do nothing
+                }
+
+                // Create a new task
+                TaskDefinition td = ts.NewTask();
+                td.RegistrationInfo.Description = "Starts Rebound Run as elevated.";
+                td.Principal.UserId = Environment.UserDomainName + "\\" + Environment.UserName; // Set the user
+                td.Principal.LogonType = TaskLogonType.InteractiveToken; // Allows running under the user's session
+
+                // Run with highest privileges (elevated)
+                td.Principal.RunLevel = TaskRunLevel.Highest; // Run with elevated privileges
+
+                // Add a trigger to start at logon
+                td.Triggers.Add(new LogonTrigger());
+
+                // Define the action to run your application
+                td.Actions.Add(new ExecAction(appPath, "STARTUP", null));
+
+                // Register the task
+                ts.RootFolder.RegisterTaskDefinition(taskName, td);
+                Console.WriteLine("Scheduled task created successfully.");
+            }
+        }
+
         private void CreateShortcut()
         {
+            //CreateStartupTask();
+
             string startupFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup);
             string oldShortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRun.lnk");
             try
@@ -296,13 +339,22 @@ namespace ReboundRun
             }
             string shortcutPath = System.IO.Path.Combine(startupFolderPath, "ReboundRunStartup.lnk");
             string appPath = "C:\\Rebound11\\rrunSTARTUP.exe";
+            /*try
+            {
+                File.Delete(shortcutPath);
+            }
+            catch
+            {
+
+            }
+            return;*/
 
             if (!System.IO.File.Exists(shortcutPath))
             {
                 WshShell shell = new WshShell();
                 IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutPath);
                 shortcut.Description = "Rebound Run";
-                shortcut.TargetPath = appPath;
+                shortcut.TargetPath = "C:\\Rebound11\\rrunSTARTUP.exe";
                 shortcut.Save();
             }
         }

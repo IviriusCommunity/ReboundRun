@@ -515,10 +515,15 @@ namespace ReboundRun
 
         private const uint WM_CLOSE = 0x0010;
 
-        private void CloseRunBox()
+        private async void CloseRunBox()
         {
             // Find the window with the title "Run"
             IntPtr hWnd = FindWindow(null, "Run");
+            IntPtr taskManagerHandle = FindWindow("TaskManagerWindow", "Task Manager");
+            IntPtr hWndtaskmgr = FindWindowEx(taskManagerHandle, IntPtr.Zero, "#32770", "Create new task");
+            IntPtr hWndtaskmgr2 = FindWindow("#32770", "Create new task");
+
+            Debug.WriteLine(hWndtaskmgr2);
 
             if (hWnd != IntPtr.Zero)
             {
@@ -539,10 +544,40 @@ namespace ReboundRun
                         App.m_window.Show();
                         App.m_window.Activate();
                         (App.m_window as MainWindow).BringToFront();
+                        return;
                     }
                     this.BringToFront();
                 }
             }
+            /*if (hWndtaskmgr2 != IntPtr.Zero)
+            {
+                // Send WM_CLOSE to close the window
+                bool sent = PostMessage(hWndtaskmgr2, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+
+                if (sent)
+                {
+                    try
+                    {
+                        (App.m_window as MainWindow).BringToFront();
+                        App.m_window.Title = "Rebound Run";
+                        await Task.Delay(250);
+                        App.m_window.Move(50, 50);
+                        return;
+                    }
+                    catch
+                    {
+                        App.m_window = new MainWindow();
+                        App.m_window.Show();
+                        App.m_window.Activate();
+                        (App.m_window as MainWindow).BringToFront();
+                        App.m_window.Title = "Reound Run";
+                        await Task.Delay(250);
+                        App.m_window.Move(50, 50);
+                        return;
+                    }
+                    this.BringToFront();
+                }
+            }*/
         }
 
         private async void RunBox_KeyUp(object sender, KeyRoutedEventArgs e)
@@ -653,21 +688,29 @@ namespace ReboundRun
             CheckForRunBox();
         }
 
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
         public void CheckForRunBox()
         {
             IntPtr hWnd = FindWindow(null, "Run");
+            IntPtr taskManagerHandle = FindWindow(null, "Task Manager");
+            IntPtr hWndtaskmgr = FindWindowEx(taskManagerHandle, IntPtr.Zero, null, "Create new task");
             if (hWnd == IntPtr.Zero)
             {
                 App.allowCloseOfRunBox = true;
                 CloseRunBoxMethod();
                 return;
             }
-            else
+            if (hWndtaskmgr == IntPtr.Zero)
             {
-                App.allowCloseOfRunBox = false;
+                App.allowCloseOfRunBox = true;
                 CloseRunBoxMethod();
                 return;
             }
+            App.allowCloseOfRunBox = false;
+            CloseRunBoxMethod();
+            return;
         }
 
         private void WindowEx_Closed(object sender, WindowEventArgs args)
