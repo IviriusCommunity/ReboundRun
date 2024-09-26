@@ -80,7 +80,7 @@
                                                                     <VisualState.Setters>
                                                                         <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource SplitButtonForegroundDisabled}" />
                                                                         <Setter Target="ContentPresenter.BorderBrush" Value="Transparent" />
-                                                                        <Setter Target="RootGrid.Background" Value="Transparent" />
+                                                                        <Setter Target="RootGrid.Background" Value="{ThemeResource AccentFillColorDisabledBrush}" />
                                                                     </VisualState.Setters>
                                                                 </VisualState>
                                                             </VisualStateGroup>
@@ -295,7 +295,7 @@
             </Style>
         </Grid.Resources>
         <TextBlock Text="Type the name of a program, folder, document, or Internet resource, and Windows will open it for you." TextWrapping="WrapWholeWords" Margin="125, 25, 25, 25"/>
-        <ComboBox x:Name="RunBox" KeyUp="RunBox_KeyUp" KeyDown="RunBox_KeyDown" IsEditable="True" HorizontalAlignment="Stretch" Margin="125, 85, 25, 0"/>
+        <ComboBox x:Name="RunBox" SelectionChanged="RunBox_SelectionChanged" LostFocus="RunBox_LostFocus" KeyUp="RunBox_KeyUp" KeyDown="RunBox_KeyDown" IsEditable="True" HorizontalAlignment="Stretch" Margin="125, 85, 25, 0"/>
         <TextBox x:Name="ArgsBox" Margin="126, 130, 25, 0" VerticalAlignment="Top"/>
         <Image Source="/Assets/RunBox.ico" Width="64" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="30, 15"/>
         <TextBlock Text="Open:" Margin="30, 90, 0, 0" HorizontalAlignment="Left"/>
@@ -309,7 +309,7 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <SplitButton Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Run" Margin="20, 20, 0, 20" Height="32">
+            <SplitButton x:Name="RunButton" Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Run" Margin="20, 20, 0, 20" Height="32">
                 <SplitButton.Flyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="Hover for information" IsEnabled="False">

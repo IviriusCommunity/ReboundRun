@@ -274,11 +274,25 @@ namespace ReboundRun
             }
 
             // Activate the main window
-            m_window.Activate();
+            try
+            {
+                m_window.Activate();
+            }
+            catch
+            {
+
+            }
 
             // Ensure m_window is brought to the front with more delay
             await Task.Delay(100);  // Increase delay slightly
-            m_window.Activate();  // Reactivate the main window to ensure focus
+            try
+            {
+                m_window.Activate();  // Reactivate the main window to ensure focus
+            }
+            catch
+            {
+
+            }
             m_window.Show();  // Show the window
 
             ((WindowEx)m_window).BringToFront();

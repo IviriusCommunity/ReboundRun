@@ -1,59 +1,38 @@
 using Microsoft.Graphics.Display;
-using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using Microsoft.UI.Xaml.Navigation;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
-using System.Threading;
 using System.Threading.Tasks;
-using Windows.ApplicationModel;
-using Windows.ApplicationModel.Appointments.AppointmentsProvider;
-using Windows.ApplicationModel.Core;
-using Windows.ApplicationModel.Store;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.Storage.Pickers;
 using Windows.System;
-using Windows.UI.Core;
 using WinUIEx;
-
-// To learn more about WinUI, the WinUI project structure,
-// and more about our project templates, see: http://aka.ms/winui-project-info.
 
 namespace ReboundRun
 {
-    /// <summary>
-    /// An empty window that can be used on its own or navigated to within a Frame.
-    /// </summary>
     public sealed partial class MainWindow : WindowEx
     {
         public double Scale()
         {
             try
             {
-                // Get the DisplayInformation object for the current view
-                DisplayInformation displayInformation = DisplayInformation.CreateForWindowId(this.AppWindow.Id);
-                // Get the RawPixelsPerViewPixel which gives the scale factor
-                var scaleFactor = displayInformation.RawPixelsPerViewPixel;
-                return scaleFactor;
+                return DisplayInformation.CreateForWindowId(AppWindow.Id).RawPixelsPerViewPixel;
             }
             catch
             {
                 return 0;
             }
         }
+
 
         public MainWindow()
         {
@@ -117,31 +96,6 @@ namespace ReboundRun
 
                 runMRUKey.Close();
             }
-            /*try
-            {
-                // Access the registry key for the Run history
-                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\RunMRU"))
-                {
-                    List<string> runHistory = new();
-                    if (key != null)
-                    {
-                        foreach (string valueName in key.GetValueNames())
-                        {
-                            object value = key.GetValue(valueName);
-                            if (value is not null or "MRUList")
-                            {
-                                runHistory.Add(value.ToString());
-                            }
-                        }
-                    }
-                    RunBox.ItemsSource = runHistory;
-                    RunBox.SelectedIndex = 0;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error reading Run history: {ex.Message}");
-            }*/
         }
 
         public async Task Run(bool runLegacy = false, bool admin = false)
@@ -272,7 +226,7 @@ namespace ReboundRun
                                 await res.WaitForExitAsync();
                                 if (res.ExitCode == 0) Close();
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
                             }
@@ -303,7 +257,7 @@ namespace ReboundRun
                                 Close();
                                 Process.GetCurrentProcess().Kill();
                             }
-                            catch (Exception ex)
+                            catch (Exception)
                             {
                                 await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
                             }
@@ -326,7 +280,14 @@ namespace ReboundRun
 
         public async void CloseRunBoxMethod()
         {
+            try
+            {
                 CloseRunBox();
+            }
+            catch
+            {
+                
+            }
 
             await Task.Delay(50);
             CloseRunBoxMethod();
@@ -377,7 +338,7 @@ namespace ReboundRun
                     throw new Exception($"Process exited with code {process.ExitCode}");
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await this.ShowMessageDialogAsync("The system cannot find the file specified or the command line arguments are invalid.", "Error");
             }
@@ -436,9 +397,6 @@ namespace ReboundRun
                     LoadRunHistory();
                 }
             }
-
-            // Clear the input box
-            //RunBox.Text = string.Empty;
         }
 
         private async void MenuFlyoutItem_Click(object sender, RoutedEventArgs e)
@@ -463,45 +421,7 @@ namespace ReboundRun
 
         private void MenuFlyoutItem_Click_4(object sender, RoutedEventArgs e)
         {
-            ClearRunHistory();
-        }
 
-        private async void ClearRunHistory()
-        {
-            const string runMRUPath = @"Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU";
-            RegistryKey runMRUKey = Registry.CurrentUser.OpenSubKey(runMRUPath);
-            try
-            {
-                /*string psCommand = @"Set-ItemProperty -Path ""HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\RunMRU"" -Name ""MRUList"" -Value """"";
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell.exe",
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                //startInfo.Arguments += " -Verb RunAs";
-                startInfo.Verb = "runas";
-
-                try
-                {
-                    Process.Start(startInfo);
-                }
-                catch (Exception ex)
-                {
-                    await this.ShowMessageDialogAsync($"The system cannot find the file specified.");
-                }
-                RunBox.ItemsSource = null;*/
-                LoadRunHistory(true);
-            }
-            catch (SecurityException ex)
-            {
-                throw new InvalidOperationException("Access denied to the registry key.", ex);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                throw new InvalidOperationException("Unauthorized access to the registry key.", ex);
-            }
         }
 
         private HashSet<VirtualKey> pressedKeys = new();
@@ -520,10 +440,7 @@ namespace ReboundRun
             // Find the window with the title "Run"
             IntPtr hWnd = FindWindow(null, "Run");
             IntPtr taskManagerHandle = FindWindow("TaskManagerWindow", "Task Manager");
-            IntPtr hWndtaskmgr = FindWindowEx(taskManagerHandle, IntPtr.Zero, "#32770", "Create new task");
             IntPtr hWndtaskmgr2 = FindWindow("#32770", "Create new task");
-
-            Debug.WriteLine(hWndtaskmgr2);
 
             if (hWnd != IntPtr.Zero)
             {
@@ -540,42 +457,65 @@ namespace ReboundRun
                     }
                     catch
                     {
+                        try
+                        {
+                            this.Close();
+                            App.m_window.Close();
+                        }
+                        catch
+                        {
+
+                        }
                         App.m_window = new MainWindow();
                         App.m_window.Show();
                         App.m_window.Activate();
                         (App.m_window as MainWindow).BringToFront();
                         return;
                     }
-                    this.BringToFront();
                 }
             }
             /*if (hWndtaskmgr2 != IntPtr.Zero)
             {
-                // Send WM_CLOSE to close the window
-                bool sent = PostMessage(hWndtaskmgr2, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
-
-                if (sent)
+                try
                 {
-                    try
+                    // Send WM_CLOSE to close the window
+                    bool sent = PostMessage(hWndtaskmgr2, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+
+                    if (sent)
                     {
-                        (App.m_window as MainWindow).BringToFront();
-                        App.m_window.Title = "Rebound Run";
-                        await Task.Delay(250);
-                        App.m_window.Move(50, 50);
-                        return;
+                        try
+                        {
+                            (App.m_window as MainWindow).BringToFront();
+                            App.m_window.Title = "Rebound Run - Create new task (Task Manager)";
+                            await Task.Delay(250);
+                            App.m_window.Move((int)(25 * Scale()), (int)(25 * Scale()));
+                            return;
+                        }
+                        catch
+                        {
+                            try
+                            {
+                                this.Close();
+                                App.m_window.Close();
+                            }
+                            catch
+                            {
+
+                            }
+                            App.m_window = new MainWindow();
+                            App.m_window.Show();
+                            App.m_window.Activate();
+                            (App.m_window as MainWindow).BringToFront();
+                            App.m_window.Title = "Rebound Run - Create new task (Task Manager)";
+                            await Task.Delay(250);
+                            App.m_window.Move((int)(25 * Scale()), (int)(25 * Scale()));
+                            return;
+                        }
                     }
-                    catch
-                    {
-                        App.m_window = new MainWindow();
-                        App.m_window.Show();
-                        App.m_window.Activate();
-                        (App.m_window as MainWindow).BringToFront();
-                        App.m_window.Title = "Reound Run";
-                        await Task.Delay(250);
-                        App.m_window.Move(50, 50);
-                        return;
-                    }
-                    this.BringToFront();
+                }
+                catch
+                {
+
                 }
             }*/
         }
@@ -624,6 +564,20 @@ namespace ReboundRun
             }
 
             pressedKeys.Remove(e.Key);
+
+            CheckRunBoxText();
+        }
+
+        public void CheckRunBoxText()
+        {
+            if (!string.IsNullOrWhiteSpace(RunBox.Text))
+            {
+                RunButton.IsEnabled = true;
+                VisualStateManager.GoToState(RunButton, "Normal", true);
+                return;
+            }
+            RunButton.IsEnabled = false;
+            VisualStateManager.GoToState(RunButton, "Disabled", true);
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -672,15 +626,13 @@ namespace ReboundRun
         private void RunBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
             pressedKeys.Add(e.Key);
+
+            CheckRunBoxText();
         }
 
         private void Grid_KeyUp(object sender, KeyRoutedEventArgs e)
         {
-            /*if (e.Key == VirtualKey.Escape)
-            {
-                this.Close();
-                return;
-            }*/
+
         }
 
         private void WindowEx_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
@@ -688,7 +640,7 @@ namespace ReboundRun
             CheckForRunBox();
         }
 
-        [DllImport("user32.dll", SetLastError = true)]
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
         public void CheckForRunBox()
@@ -715,58 +667,17 @@ namespace ReboundRun
 
         private void WindowEx_Closed(object sender, WindowEventArgs args)
         {
-            //App.allowCloseOfRunBox = false;
-        }
-    }
 
-    public static class NativeMethods
-    {
-        [StructLayout(LayoutKind.Sequential)]
-        public struct STARTUPINFO
+        }
+
+        private void RunBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            public uint cb;
-            public string lpReserved;
-            public string lpDesktop;
-            public string lpTitle;
-            public uint dwX;
-            public uint dwY;
-            public uint dwXSize;
-            public uint dwYSize;
-            public uint dwXCountChars;
-            public uint dwYCountChars;
-            public uint dwFillAttribute;
-            public uint dwFlags;
-            public short wShowWindow;
-            public short cbReserved2;
-            public IntPtr lpReserved2;
-            public IntPtr hStdInput;
-            public IntPtr hStdOutput;
-            public IntPtr hStdError;
+            CheckRunBoxText();
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct PROCESS_INFORMATION
+        private void RunBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            public IntPtr hProcess;
-            public IntPtr hThread;
-            public uint dwProcessId;
-            public uint dwThreadId;
+            CheckRunBoxText();
         }
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool CreateProcess(
-            string lpApplicationName,
-            string lpCommandLine,
-            IntPtr lpProcessAttributes,
-            IntPtr lpThreadAttributes,
-            bool bInheritHandles,
-            uint dwCreationFlags,
-            IntPtr lpEnvironment,
-            string lpCurrentDirectory,
-            ref STARTUPINFO lpStartupInfo,
-            out PROCESS_INFORMATION lpProcessInformation);
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern uint GetLastError();
     }
 }
