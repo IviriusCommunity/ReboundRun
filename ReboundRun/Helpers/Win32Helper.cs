@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 #pragma warning disable CA2211 // Non-constant fields should not be visible
+#pragma warning disable CA1401 // P/Invokes should not be visible
 #nullable enable
 
 namespace ReboundRun.Helpers
