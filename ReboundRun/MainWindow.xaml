@@ -8,10 +8,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winuiex="using:WinUIEx"
     mc:Ignorable="d"
-    Activated="WindowEx_Activated"
-    Closed="WindowEx_Closed">
+    Activated="WindowEx_Activated">
 
-    <Grid KeyUp="Grid_KeyUp">
+    <Grid>
         <Grid.Resources>
             <Style x:Key="AccentSplitButtonStyle" TargetType="SplitButton">
                 <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
@@ -349,9 +348,6 @@
                             <MenuFlyoutItem.KeyboardAccelerators>
                                 <KeyboardAccelerator Modifiers="Menu" Key="Enter"/>
                             </MenuFlyoutItem.KeyboardAccelerators>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem Text="Clear history" Click="MenuFlyoutItem_Click_4" Visibility="Collapsed">
-                            
                         </MenuFlyoutItem>
                     </MenuFlyout>
                 </SplitButton.Flyout>

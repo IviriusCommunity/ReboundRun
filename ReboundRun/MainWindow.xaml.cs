@@ -4,18 +4,18 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Win32;
+using ReboundRun.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security;
 using System.Threading.Tasks;
 using Windows.Storage.Pickers;
 using Windows.System;
 using WinUIEx;
+
+#pragma warning disable IDE0044 // Add readonly modifier
 
 namespace ReboundRun
 {
@@ -67,7 +67,7 @@ namespace ReboundRun
                 string mruList = runMRUKey.GetValue("MRUList")?.ToString();
                 if (mruList != null)
                 {
-                    List<string> runHistory = new List<string>();
+                    List<string> runHistory = [];
 
                     // Iterate over each character in the MRUList to get the entries in order
                     foreach (char entry in mruList)
@@ -78,7 +78,8 @@ namespace ReboundRun
                             // Remove the '/1' suffix if it exists
                             if (entryValue.EndsWith("\\1"))
                             {
-                                entryValue = entryValue.Substring(0, entryValue.Length - 2);
+                                entryValue = entryValue[..^2];
+                                // Same as entryValue = entryValue.Substring(0, entryValue.Length - 2);
                             }
                             if (clear == false) runHistory.Add(entryValue);
                             else
@@ -239,7 +240,7 @@ namespace ReboundRun
                     {
                         if (runLegacy == true)
                         {
-                            App.allowCloseOfRunBox = false;
+                            App.AllowClosingRunBox = false;
                             var startInfo = new ProcessStartInfo
                             {
                                 FileName = "powershell.exe",
@@ -419,40 +420,25 @@ namespace ReboundRun
             await Run(true, true);
         }
 
-        private void MenuFlyoutItem_Click_4(object sender, RoutedEventArgs e)
-        {
+        private HashSet<VirtualKey> PressedKeys = [];
 
-        }
-
-        private HashSet<VirtualKey> pressedKeys = new();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-
-        private const uint WM_CLOSE = 0x0010;
-
-        private async void CloseRunBox()
+        private void CloseRunBox()
         {
             // Find the window with the title "Run"
-            IntPtr hWnd = FindWindow(null, "Run");
-            IntPtr taskManagerHandle = FindWindow("TaskManagerWindow", "Task Manager");
-            IntPtr hWndtaskmgr2 = FindWindow("#32770", "Create new task");
+            IntPtr hWnd = Win32Helper.FindWindow(null, "Run");
+            //IntPtr hWndtaskmgr2 = Win32Helper.FindWindow("#32770", "Create new task");
 
             if (hWnd != IntPtr.Zero)
             {
                 // Send WM_CLOSE to close the window
-                bool sent = PostMessage(hWnd, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                bool sent = Win32Helper.PostMessage(hWnd, Win32Helper.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
 
                 if (sent)
                 {
                     try
                     {
-                        (App.m_window as MainWindow).BringToFront();
-                        App.m_window.Title = "Rebound Run";
+                        (App.MainWindow as MainWindow)?.BringToFront();
+                        App.MainWindow.Title ??= "Rebound Run";
                         return;
                     }
                     catch
@@ -460,16 +446,16 @@ namespace ReboundRun
                         try
                         {
                             this.Close();
-                            App.m_window.Close();
+                            App.MainWindow?.Close();
                         }
                         catch
                         {
 
                         }
-                        App.m_window = new MainWindow();
-                        App.m_window.Show();
-                        App.m_window.Activate();
-                        (App.m_window as MainWindow).BringToFront();
+                        App.MainWindow = new MainWindow();
+                        App.MainWindow.Show();
+                        App.MainWindow.Activate();
+                        (App.MainWindow as MainWindow).BringToFront();
                         return;
                     }
                 }
@@ -479,16 +465,16 @@ namespace ReboundRun
                 try
                 {
                     // Send WM_CLOSE to close the window
-                    bool sent = PostMessage(hWndtaskmgr2, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+                    bool sent = Win32Helper.PostMessage(hWndtaskmgr2, Win32Helper.WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
 
                     if (sent)
                     {
                         try
                         {
-                            (App.m_window as MainWindow).BringToFront();
-                            App.m_window.Title = "Rebound Run - Create new task (Task Manager)";
+                            (App.MainWindow as MainWindow).BringToFront();
+                            App.MainWindow.Title = "Rebound Run - Create new task (Task Manager)";
                             await Task.Delay(250);
-                            App.m_window.Move((int)(25 * Scale()), (int)(25 * Scale()));
+                            App.MainWindow.Move((int)(25 * Scale()), (int)(25 * Scale()));
                             return;
                         }
                         catch
@@ -496,19 +482,19 @@ namespace ReboundRun
                             try
                             {
                                 this.Close();
-                                App.m_window.Close();
+                                App.MainWindow.Close();
                             }
                             catch
                             {
 
                             }
-                            App.m_window = new MainWindow();
-                            App.m_window.Show();
-                            App.m_window.Activate();
-                            (App.m_window as MainWindow).BringToFront();
-                            App.m_window.Title = "Rebound Run - Create new task (Task Manager)";
+                            App.MainWindow = new MainWindow();
+                            App.MainWindow.Show();
+                            App.MainWindow.Activate();
+                            (App.MainWindow as MainWindow).BringToFront();
+                            App.MainWindow.Title = "Rebound Run - Create new task (Task Manager)";
                             await Task.Delay(250);
-                            App.m_window.Move((int)(25 * Scale()), (int)(25 * Scale()));
+                            App.MainWindow.Move((int)(25 * Scale()), (int)(25 * Scale()));
                             return;
                         }
                     }
@@ -523,47 +509,47 @@ namespace ReboundRun
         private async void RunBox_KeyUp(object sender, KeyRoutedEventArgs e)
         {
             if (e.Key == VirtualKey.Escape &&
-                !pressedKeys.Contains(VirtualKey.Control) &&
-                !pressedKeys.Contains(VirtualKey.Menu) &&
-                !pressedKeys.Contains(VirtualKey.Shift))
+                !PressedKeys.Contains(VirtualKey.Control) &&
+                !PressedKeys.Contains(VirtualKey.Menu) &&
+                !PressedKeys.Contains(VirtualKey.Shift))
             {
                 Close();
                 return;
             }
             else if (e.Key == VirtualKey.Enter &&
-                pressedKeys.Contains(VirtualKey.Control) &&
-                pressedKeys.Contains(VirtualKey.Menu) &&
-                pressedKeys.Contains(VirtualKey.Shift))
+                PressedKeys.Contains(VirtualKey.Control) &&
+                PressedKeys.Contains(VirtualKey.Menu) &&
+                PressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run(true, true);
                 return;
             }
             else if (e.Key == VirtualKey.Enter &&
-                pressedKeys.Contains(VirtualKey.Control) &&
-                !pressedKeys.Contains(VirtualKey.Menu) &&
-                pressedKeys.Contains(VirtualKey.Shift))
+                PressedKeys.Contains(VirtualKey.Control) &&
+                !PressedKeys.Contains(VirtualKey.Menu) &&
+                PressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run(false, true);
                 return;
             }
             else if (e.Key == VirtualKey.Enter &&
-                !pressedKeys.Contains(VirtualKey.Control) &&
-                pressedKeys.Contains(VirtualKey.Menu) &&
-                !pressedKeys.Contains(VirtualKey.Shift))
+                !PressedKeys.Contains(VirtualKey.Control) &&
+                PressedKeys.Contains(VirtualKey.Menu) &&
+                !PressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run(true, false);
                 return;
             }
             else if (e.Key == VirtualKey.Enter &&
-                !pressedKeys.Contains(VirtualKey.Control) &&
-                !pressedKeys.Contains(VirtualKey.Menu) &&
-                !pressedKeys.Contains(VirtualKey.Shift))
+                !PressedKeys.Contains(VirtualKey.Control) &&
+                !PressedKeys.Contains(VirtualKey.Menu) &&
+                !PressedKeys.Contains(VirtualKey.Shift))
             {
                 await Run();
                 return;
             }
 
-            pressedKeys.Remove(e.Key);
+            PressedKeys.Remove(e.Key);
 
             CheckRunBoxText();
         }
@@ -588,7 +574,7 @@ namespace ReboundRun
         private async void Button_Click_1(object sender, RoutedEventArgs e)
         {
             // Create a file picker
-            var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+            var openPicker = new FileOpenPicker();
 
             // See the sample code below for how to make the window accessible from the App class.
             var window = this;
@@ -625,49 +611,42 @@ namespace ReboundRun
 
         private void RunBox_KeyDown(object sender, KeyRoutedEventArgs e)
         {
-            pressedKeys.Add(e.Key);
+            PressedKeys.Add(e.Key);
 
             CheckRunBoxText();
         }
 
-        private void Grid_KeyUp(object sender, KeyRoutedEventArgs e)
-        {
-
-        }
-
-        private void WindowEx_Activated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+        private async void WindowEx_Activated(object sender, WindowActivatedEventArgs args)
         {
             CheckForRunBox();
-        }
+            await Task.Delay(5);
 
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-        static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+            if (GroupPolicyHelper.IsGroupPolicyEnabled(GroupPolicyHelper.EXPLORER_GROUP_POLICY_PATH, "NoRun", 1) == true)
+            {
+                this.Close();
+            }
+        }
 
         public void CheckForRunBox()
         {
-            IntPtr hWnd = FindWindow(null, "Run");
-            IntPtr taskManagerHandle = FindWindow(null, "Task Manager");
-            IntPtr hWndtaskmgr = FindWindowEx(taskManagerHandle, IntPtr.Zero, null, "Create new task");
+            IntPtr hWnd = Win32Helper.FindWindow(null, "Run");
+            IntPtr taskManagerHandle = Win32Helper.FindWindow(null, "Task Manager");
+            IntPtr hWndtaskmgr = Win32Helper.FindWindowEx(taskManagerHandle, IntPtr.Zero, null, "Create new task");
             if (hWnd == IntPtr.Zero)
             {
-                App.allowCloseOfRunBox = true;
+                App.AllowClosingRunBox = true;
                 CloseRunBoxMethod();
                 return;
             }
             if (hWndtaskmgr == IntPtr.Zero)
             {
-                App.allowCloseOfRunBox = true;
+                App.AllowClosingRunBox = true;
                 CloseRunBoxMethod();
                 return;
             }
-            App.allowCloseOfRunBox = false;
+            App.AllowClosingRunBox = false;
             CloseRunBoxMethod();
             return;
-        }
-
-        private void WindowEx_Closed(object sender, WindowEventArgs args)
-        {
-
         }
 
         private void RunBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
