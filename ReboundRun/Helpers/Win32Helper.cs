@@ -24,30 +24,6 @@ namespace ReboundRun.Helpers
         public static LowLevelKeyboardProc? keyboardProc;
         public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct INPUT
-        {
-            public uint type;
-            public MOUSEKEYBDHARDWAREINPUT mkhi;
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        public struct MOUSEKEYBDHARDWAREINPUT
-        {
-            [FieldOffset(0)]
-            public MOUSEKEYBDHARDWAREINPUT_KBD ki;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct MOUSEKEYBDHARDWAREINPUT_KBD
-        {
-            public ushort wVk;
-            public ushort wScan;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
