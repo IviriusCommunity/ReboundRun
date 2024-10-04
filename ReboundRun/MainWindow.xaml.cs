@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Win32;
 using ReboundRun.Helpers;
+using ReboundRun.Languages;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -37,13 +38,14 @@ namespace ReboundRun
         public MainWindow()
         {
             this.InitializeComponent();
+            StringTable.ReadLanguage();
             this.MoveAndResize(25 * Scale(), (WindowsDisplayAPI.Display.GetDisplays().ToList<WindowsDisplayAPI.Display>()[0].CurrentSetting.Resolution.Height - 370 / Scale()) / Scale(), 525, 295);
             this.IsMinimizable = false;
             this.IsMaximizable = false;
             this.IsResizable = false;
             this.AppWindow.DefaultTitleBarShouldMatchAppModeTheme = true;
             this.SetIcon($"{AppContext.BaseDirectory}/Assets/RunBox.ico");
-            this.Title = "Rebound Run";
+            this.Title = StringTable.AppTitle;
             this.SystemBackdrop = new MicaBackdrop();
             CheckForRunBox();
             Load();

@@ -7,6 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winuiex="using:WinUIEx"
+    xmlns:StringTable="using:ReboundRun.Languages"
     mc:Ignorable="d"
     Activated="WindowEx_Activated">
 
@@ -308,7 +309,7 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <SplitButton x:Name="RunButton" Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="Run" Margin="20, 20, 0, 20" Height="32">
+            <SplitButton x:Name="RunButton" Click="SplitButton_Click" Grid.Column="0" Style="{StaticResource AccentSplitButtonStyle}" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Content="{x:Bind Path=StringTable:StringTable.Run}" Margin="20, 20, 0, 20" Height="32">
                 <SplitButton.Flyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="Hover for information" IsEnabled="False">
